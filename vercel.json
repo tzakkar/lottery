@@ -2,7 +2,7 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "product/dist",
-  "installCommand": "npm install && cd product && npm ci",
+  "installCommand": "npm install && cd product && npm install",
   "rewrites": [
     { "source": "/getTempData", "destination": "/api/lottery?path=getTempData" },
     { "source": "/getUsers", "destination": "/api/lottery?path=getUsers" },
