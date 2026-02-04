@@ -212,9 +212,9 @@ function bindEvent() {
     if (isLotting) {
       if (e.target.id === "lottery") {
         rotateObj.stop();
-        btns.lottery.innerHTML = "开始抽奖";
+        btns.lottery.innerHTML = "Start Draw";
       } else {
-        addQipao("正在抽奖，抽慢一点点～～");
+        addQipao("Drawing in progress, hold on...");
       }
       return false;
     }
@@ -229,7 +229,7 @@ function bindEvent() {
       // 进入抽奖
       case "enter":
         removeHighlight();
-        addQipao(`马上抽取[${currentPrize.title}],不要走开。`);
+        addQipao(`Drawing [${currentPrize.title}] next — stay tuned.`);
         // rotate = !rotate;
         rotate = true;
         switchScreen("lottery");
@@ -237,12 +237,12 @@ function bindEvent() {
       // 重置
       case "reset":
         let doREset = window.confirm(
-          "是否确认重置数据，重置后，当前已抽的奖项全部清空？"
+          "Are you sure you want to reset? All current lottery results will be cleared."
         );
         if (!doREset) {
           return;
         }
-        addQipao("重置所有数据，重新抽奖");
+        addQipao("All data reset. Ready for a fresh draw.");
         addHighlight();
         resetCard();
         // 重置所有数据
@@ -267,16 +267,16 @@ function bindEvent() {
           // 抽奖
           lottery();
         });
-        addQipao(`正在抽取[${currentPrize.title}],调整好姿势`);
+        addQipao(`Drawing [${currentPrize.title}] — get ready!`);
         break;
       // 重新抽奖
       case "reLottery":
         if (currentLuckys.length === 0) {
-          addQipao(`当前还没有抽奖，无法重新抽取喔~~`);
+          addQipao("No draw has been made yet. Start a draw first.");
           return;
         }
         setErrorData(currentLuckys);
-        addQipao(`重新抽取[${currentPrize.title}],做好准备`);
+        addQipao(`Redrawing [${currentPrize.title}] — get set!`);
         setLotteryStatus(true);
         // 重新抽奖则直接进行抽取，不对上一次的抽奖数据进行保存
         // 抽奖
@@ -293,7 +293,7 @@ function bindEvent() {
             currentLuckys = [];
           });
           exportData();
-          addQipao(`数据已保存到EXCEL中。`);
+          addQipao("Results have been saved to Excel.");
         });
         break;
     }
@@ -511,7 +511,7 @@ function selectCard(duration = 600) {
 
   let text = currentLuckys.map(item => item[1]);
   addQipao(
-    `恭喜${text.join("、")}获得${currentPrize.title}, 新的一年必定旺旺旺。`
+    `Congratulations to ${text.join(", ")} for winning ${currentPrize.title}!`
   );
 
   selectedCardIndex.forEach((cardIndex, index) => {
@@ -613,10 +613,10 @@ function resetCard(duration = 500) {
 function lottery() {
   // if (isLotting) {
   //   rotateObj.stop();
-  //   btns.lottery.innerHTML = "开始抽奖";
+  //   btns.lottery.innerHTML = "Start Draw";
   //   return;
   // }
-  btns.lottery.innerHTML = "结束抽奖";
+  btns.lottery.innerHTML = "Stop Draw";
   rotateBall().then(() => {
     // 将之前的记录置空
     currentLuckys = [];
@@ -628,7 +628,7 @@ function lottery() {
       leftPrizeCount = currentPrize.count - (luckyData ? luckyData.length : 0);
 
     if (leftCount < perCount) {
-      addQipao("剩余参与抽奖人员不足，现在重新设置所有人员可以进行二次抽奖！");
+      addQipao("Not enough participants left. All participants have been reset for another round.");
       basicData.leftUsers = basicData.users.slice();
       leftCount = basicData.leftUsers.length;
     }
@@ -855,7 +855,7 @@ window.onload = function () {
             animate();
           },
           () => {
-            addQipao("背景音乐自动播放失败，请手动播放！");
+            addQipao("Background music could not auto-play. Please click to play.");
           }
         );
       } else {

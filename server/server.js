@@ -105,13 +105,13 @@ router.post("/saveData", (req, res, next) => {
   setLucky(data.type, data.data)
     .then(t => {
       res.json({
-        type: "设置成功！"
+        type: "Success!"
       });
       log(`保存奖品数据成功`);
     })
     .catch(data => {
       res.json({
-        type: "设置失败！"
+        type: "Failed!"
       });
       log(`保存奖品数据失败`);
     });
@@ -123,13 +123,13 @@ router.post("/errorData", (req, res, next) => {
   setErrorData(data.data)
     .then(t => {
       res.json({
-        type: "设置成功！"
+        type: "Success!"
       });
       log(`保存没来人员数据成功`);
     })
     .catch(data => {
       res.json({
-        type: "设置失败！"
+        type: "Failed!"
       });
       log(`保存没来人员数据失败`);
     });
@@ -138,18 +138,18 @@ router.post("/errorData", (req, res, next) => {
 // 保存数据到excel中去
 router.post("/export", (req, res, next) => {
   let type = [1, 2, 3, 4, 5, defaultType],
-    outData = [["工号", "姓名", "部门"]];
+    outData = [["ID", "Name", "Department"]];
   cfg.prizes.forEach(item => {
     outData.push([item.text]);
     outData = outData.concat(luckyData[item.type] || []);
   });
 
-  writeXML(outData, "/抽奖结果.xlsx")
+  writeXML(outData, "/Lottery_Results.xlsx")
     .then(dt => {
       // res.download('/抽奖结果.xlsx');
       res.status(200).json({
         type: "success",
-        url: "抽奖结果.xlsx"
+        url: "Lottery_Results.xlsx"
       });
       log(`导出数据成功！`);
     })

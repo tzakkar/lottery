@@ -1,13 +1,18 @@
 {
   "name": "lucky",
   "version": "1.0.0",
-  "description": "抽奖",
+  "description": "Annual dinner lottery",
   "main": "index.js",
+  "overrides": {
+    "is-data-descriptor": "1.0.1",
+    "is-accessor-descriptor": "1.0.1",
+    "browserslist": ">=2.0.0"
+  },
   "scripts": {
     "start": "cd dist && node ../../server/index.js 8888",
     "serve": "npm run start",
-    "build": "webpack --mode=production --progress --colors",
-    "dev": "webpack-dev-server --config webpack.dev.js --mode=development --progress --colors"
+    "build": "node --openssl-legacy-provider node_modules/webpack/bin/webpack.js --mode=production --progress --colors",
+    "dev": "node --openssl-legacy-provider node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.dev.js --mode=development --progress --colors"
   },
   "author": "moshang",
   "license": "ISC",
