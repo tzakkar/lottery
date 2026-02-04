@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "product/dist",
+  "installCommand": "npm install && cd product && npm ci",
+  "rewrites": [
+    { "source": "/getTempData", "destination": "/api/lottery?path=getTempData" },
+    { "source": "/getUsers", "destination": "/api/lottery?path=getUsers" },
+    { "source": "/reset", "destination": "/api/lottery?path=reset" },
+    { "source": "/saveData", "destination": "/api/lottery?path=saveData" },
+    { "source": "/errorData", "destination": "/api/lottery?path=errorData" },
+    { "source": "/export", "destination": "/api/lottery?path=export" }
+  ],
+  "env": {
+    "LOTTERY_CACHE_DIR": "/tmp"
+  }
+}

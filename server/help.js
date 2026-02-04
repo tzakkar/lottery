@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const xlsx = require("node-xlsx").default;
-let cwd = path.join(__dirname, "cache");
+let cwd = process.env.LOTTERY_CACHE_DIR || path.join(__dirname, "cache");
 
 if (!fs.existsSync(cwd)) {
   fs.mkdirSync(cwd);

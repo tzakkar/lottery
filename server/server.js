@@ -247,6 +247,7 @@ function getLeftUsers() {
 loadData();
 
 module.exports = {
+  app,
   run: function(devPort, noOpen) {
     let openBrowser = true;
     if (process.argv.length > 3) {
