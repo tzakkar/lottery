@@ -1,7 +1,14 @@
 const fs = require("fs");
 const path = require("path");
-const xlsx = require("node-xlsx").default;
 let cwd = process.env.LOTTERY_CACHE_DIR || path.join(__dirname, "cache");
+
+function getXlsx() {
+  try {
+    return require("node-xlsx").default;
+  } catch (e) {
+    return null;
+  }
+}
 
 if (!fs.existsSync(cwd)) {
   fs.mkdirSync(cwd);
@@ -43,6 +50,8 @@ function loadTempData() {
  * 读取XML文件数据
  */
 function loadXML(xmlPath) {
+  const xlsx = getXlsx();
+  if (!xlsx) throw new Error("node-xlsx not available");
   let userData = xlsx.parse(xmlPath);
   let outData = [];
   userData.forEach(item => {
@@ -60,6 +69,8 @@ function loadXML(xmlPath) {
  * @param {string} name
  */
 function writeXML(data, name) {
+  const xlsx = getXlsx();
+  if (!xlsx) return Promise.reject(new Error("node-xlsx not available"));
   let buffer = xlsx.build([
     {
       name: "Lottery Results",

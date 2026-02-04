@@ -205,13 +205,32 @@ function setErrorData(data) {
 app.use(router);
 
 function loadData() {
-  console.log("加载EXCEL数据文件");
-  let cfgData = {};
-
-  // curData.users = loadXML(path.join(cwd, "data/users.xlsx"));
-  curData.users = loadXML(path.join(dataBath, "data/users.xlsx"));
-  // 重新洗牌
-  shuffle(curData.users);
+  const fs = require("fs");
+  const dataDir = process.env.VERCEL ? path.join(process.cwd(), "server", "data") : path.join(dataBath, "data");
+  const jsonPath = path.join(dataDir, "users.json");
+  const xlsxPaths = [
+    path.join(dataBath, "data", "users.xlsx"),
+    path.join(process.cwd(), "server", "data", "users.xlsx"),
+    path.join(dataDir, "users.xlsx")
+  ];
+  try {
+    if (fs.existsSync(jsonPath)) {
+      curData.users = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+      shuffle(curData.users);
+    } else {
+      let usersPath = xlsxPaths.find(p => fs.existsSync(p));
+      if (usersPath) {
+        curData.users = loadXML(usersPath);
+        shuffle(curData.users);
+      } else {
+        curData.users = [];
+      }
+    }
+  } catch (err) {
+    curData.users = [];
+    console.error("loadData error:", err.message);
+  }
+  curData.leftUsers = curData.leftUsers || Object.assign([], curData.users);
 
   // 读取已经抽取的结果
   loadTempData()
@@ -225,7 +244,7 @@ function loadData() {
 }
 
 function getLeftUsers() {
-  //  记录当前已抽取的用户
+  if (!curData.users) curData.users = [];
   let lotteredUser = {};
   for (let key in luckyData) {
     let luckys = luckyData[key];
@@ -233,7 +252,6 @@ function getLeftUsers() {
       lotteredUser[item[0]] = true;
     });
   }
-  // 记录当前已抽取但是不在线人员
   errorData.forEach(item => {
     lotteredUser[item[0]] = true;
   });
