@@ -3,6 +3,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "product/dist",
   "installCommand": "npm install && cd product && npm install",
+  "functions": {
+    "api/lottery.js": {
+      "includeFiles": "server/data/**"
+    }
+  },
   "rewrites": [
     { "source": "/getTempData", "destination": "/api/lottery?path=getTempData" },
     { "source": "/getUsers", "destination": "/api/lottery?path=getUsers" },

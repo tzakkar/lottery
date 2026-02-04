@@ -17,7 +17,8 @@ const {
 let app = express(),
   router = express.Router(),
   cwd = process.cwd(),
-  dataBath = __dirname,
+  // On Vercel, use project root so server/data/users.xlsx resolves; locally __dirname is server/
+  dataBath = process.env.VERCEL ? path.join(process.cwd(), "server") : __dirname,
   port = 8090,
   curData = {},
   luckyData = {},
