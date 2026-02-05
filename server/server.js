@@ -1,9 +1,12 @@
 const express = require("express");
-const opn = require("opn");
 const bodyParser = require("body-parser");
 const path = require("path");
-const chokidar = require("chokidar");
 const cfg = require("./config");
+
+// Optional dependencies (may fail on serverless)
+let opn, chokidar;
+try { opn = require("opn"); } catch (e) { opn = null; }
+try { chokidar = require("chokidar"); } catch (e) { chokidar = null; }
 
 const {
   loadXML,
@@ -287,7 +290,7 @@ module.exports = {
       let host = server.address().address;
       let port = server.address().port;
       global.console.log(`lottery server listenig at http://${host}:${port}`);
-      openBrowser && opn(`http://127.0.0.1:${port}`);
+      openBrowser && opn && opn(`http://127.0.0.1:${port}`);
     });
   }
 };

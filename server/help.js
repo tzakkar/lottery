@@ -10,8 +10,12 @@ function getXlsx() {
   }
 }
 
-if (!fs.existsSync(cwd)) {
-  fs.mkdirSync(cwd);
+try {
+  if (!fs.existsSync(cwd)) {
+    fs.mkdirSync(cwd, { recursive: true });
+  }
+} catch (e) {
+  console.warn("Could not create cache dir:", cwd, e.message);
 }
 
 /**
