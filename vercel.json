@@ -14,7 +14,8 @@
     { "source": "/reset", "destination": "/api/lottery?path=reset" },
     { "source": "/saveData", "destination": "/api/lottery?path=saveData" },
     { "source": "/errorData", "destination": "/api/lottery?path=errorData" },
-    { "source": "/export", "destination": "/api/lottery?path=export" }
+    { "source": "/export", "destination": "/api/lottery?path=export" },
+    { "source": "/download-results", "destination": "/api/lottery?path=download-results" }
   ],
   "env": {
     "LOTTERY_CACHE_DIR": "/tmp"

@@ -139,10 +139,25 @@ router.post("/errorData", (req, res, next) => {
     });
 });
 
-// 保存数据到excel中去
+// CSV download endpoint (GET)
+router.get("/download-results", (req, res, next) => {
+  let outData = [["ID", "Name", "Department"]];
+  cfg.prizes.forEach(item => {
+    outData.push([item.text]);
+    outData = outData.concat(luckyData[item.type] || []);
+  });
+  const csvRows = outData.map(row => 
+    row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(",")
+  );
+  const csvContent = csvRows.join("\n");
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", "attachment; filename=Lottery_Results.csv");
+  res.send(csvContent);
+});
+
+// 保存数据到excel或CSV
 router.post("/export", (req, res, next) => {
-  let type = [1, 2, 3, 4, 5, defaultType],
-    outData = [["ID", "Name", "Department"]];
+  let outData = [["ID", "Name", "Department"]];
   cfg.prizes.forEach(item => {
     outData.push([item.text]);
     outData = outData.concat(luckyData[item.type] || []);
@@ -150,19 +165,19 @@ router.post("/export", (req, res, next) => {
 
   writeXML(outData, "/Lottery_Results.xlsx")
     .then(dt => {
-      // res.download('/抽奖结果.xlsx');
       res.status(200).json({
         type: "success",
         url: "Lottery_Results.xlsx"
       });
-      log(`导出数据成功！`);
+      log(`Export success (Excel)`);
     })
     .catch(err => {
-      res.json({
-        type: "error",
-        error: err.error
+      // Fallback: return URL to CSV endpoint
+      res.status(200).json({
+        type: "success",
+        url: "/download-results"
       });
-      log(`导出数据失败！`);
+      log(`Export success (CSV fallback)`);
     });
 });
 
