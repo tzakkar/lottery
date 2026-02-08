@@ -155,14 +155,14 @@ function setPrizes(pri) {
 
 function showPrizeList(currentPrizeIndex) {
   let currentPrize = prizes[currentPrizeIndex];
+  if (!currentPrize) return;
   if (currentPrize.type === defaultType) {
     currentPrize.count === "Unlimited";
   }
-  let htmlCode = `<div class="prize-mess">Drawing <label id="prizeType" class="prize-shine">${currentPrize.text}</label> <label id="prizeText" class="prize-shine">${currentPrize.title}</label> — <label id="prizeLeft" class="prize-shine">${currentPrize.count}</label> left</div><ul class="prize-list">`;
+  const currentImg = currentPrize.img ? `<img src="${currentPrize.img}" alt="" class="prize-mess-img" onerror="this.style.display='none'">` : "";
+  let htmlCode = `<div class="prize-mess">${currentImg}<span class="prize-mess-text">Drawing <label id="prizeType" class="prize-shine">${currentPrize.text}</label> <label id="prizeText" class="prize-shine">${currentPrize.title}</label> — <label id="prizeLeft" class="prize-shine">${currentPrize.count}</label> left</span></div><ul class="prize-list">`;
   prizes.forEach(item => {
-    if (item.type === defaultType) {
-      return true;
-    }
+    const countLabel = item.count + "/" + item.count;
     htmlCode += `<li id="prize-item-${item.type}" class="prize-item ${
       item.type == currentPrize.type ? "shine" : ""
     }">
@@ -182,9 +182,9 @@ function showPrizeList(currentPrizeIndex) {
                                     </div>
                                 </div>
                                 <div id="prize-count-${
-                                  item.type
-                                }" class="prize-count-left">
-                                    ${item.count + "/" + item.count}
+                                      item.type
+                                    }" class="prize-count-left">
+                                    ${countLabel}
                                 </div>
                             </div>
                         </div>
@@ -244,13 +244,6 @@ let setPrizeData = (function () {
       prizeElement.prizeText.textContent = currentPrize.title;
 
       lasetPrizeIndex = currentPrizeIndex;
-    }
-
-    if (currentPrizeIndex === 0) {
-      prizeElement.prizeType.textContent = "Special Prize";
-      prizeElement.prizeText.textContent = " ";
-      prizeElement.prizeLeft.textContent = "Unlimited";
-      return;
     }
 
     count = totalCount - count;

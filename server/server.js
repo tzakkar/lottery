@@ -1,7 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
-const cfg = require("./config");
 
 // Optional dependencies (may fail on serverless)
 let opn, chokidar;
@@ -14,13 +13,20 @@ const {
   writeXML,
   saveDataFile,
   shuffle,
-  saveErrorDataFile
+  saveErrorDataFile,
+  getDataDir,
+  parseExcelBuffer,
+  saveUsersJson,
+  loadPrizesConfig,
+  savePrizesConfig
 } = require("./help");
+
+const defaultCfg = require("./config");
+let cfg = loadPrizesConfig(defaultCfg);
 
 let app = express(),
   router = express.Router(),
   cwd = process.cwd(),
-  // On Vercel, use project root so server/data/users.xlsx resolves; locally __dirname is server/
   dataBath = process.env.VERCEL ? path.join(process.cwd(), "server") : __dirname,
   port = 8090,
   curData = {},
@@ -28,6 +34,9 @@ let app = express(),
   errorData = [],
   defaultType = cfg.prizes[0]["type"],
   defaultPage = `default data`;
+
+let multer;
+try { multer = require("multer"); } catch (e) { multer = null; }
 
 //这里指定参数使用 json 格式
 app.use(
@@ -56,10 +65,10 @@ app.get("/", (req, res) => {
 //设置跨域访问
 app.all("*", function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
   res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
   res.header("X-Powered-By", " 3.2.1");
-  res.header("Content-Type", "application/json;charset=utf-8");
+  if (!res.getHeader("Content-Type")) res.setHeader("Content-Type", "application/json;charset=utf-8");
   next();
 });
 
@@ -181,6 +190,85 @@ router.post("/export", (req, res, next) => {
     });
 });
 
+// ----- Upload & config API -----
+const dataDir = getDataDir();
+const prizesDir = path.join(dataDir, "prizes");
+
+if (multer) {
+  const storage = multer.memoryStorage();
+  const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB
+
+  // Upload participants Excel (columns: Employee Number, ID Number, Department)
+  router.post("/upload-participants", upload.single("file"), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ type: "error", message: "No file uploaded" });
+    }
+    try {
+      const rows = parseExcelBuffer(req.file.buffer);
+      saveUsersJson(rows);
+      curData.users = rows;
+      shuffle(curData.users);
+      curData.leftUsers = curData.users.slice();
+      res.json({ type: "success", message: `Loaded ${rows.length} participants`, count: rows.length });
+    } catch (err) {
+      res.status(500).json({ type: "error", message: err.message || "Failed to parse Excel" });
+    }
+  });
+
+  // Upload prize image
+  const fs = require("fs");
+  if (!fs.existsSync(prizesDir)) fs.mkdirSync(prizesDir, { recursive: true });
+  const prizeStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, prizesDir),
+    filename: (req, file, cb) => cb(null, (req.query.id || "prize") + "-" + Date.now() + path.extname(file.originalname) || ".jpg")
+  });
+  const uploadPrizeImg = multer({ storage: prizeStorage, limits: { fileSize: 5 * 1024 * 1024 } });
+
+  router.post("/upload-prize-image", uploadPrizeImg.single("image"), (req, res) => {
+    if (!req.file) return res.status(400).json({ type: "error", message: "No image uploaded" });
+    const url = "/data/prizes/" + path.basename(req.file.path);
+    res.json({ type: "success", url });
+  });
+
+}
+
+// Save prizes config (prizes array + EACH_COUNT; images already uploaded via upload-prize-image)
+router.post("/save-prizes-config", (req, res) => {
+  const body = req.body;
+  if (!body.prizes || !Array.isArray(body.prizes)) {
+    return res.status(400).json({ type: "error", message: "Invalid prizes array" });
+  }
+  const config = {
+    prizes: body.prizes,
+    EACH_COUNT: body.EACH_COUNT || body.prizes.map((_, i) => (i === 0 ? 1 : 1)),
+    COMPANY: body.COMPANY != null ? body.COMPANY : cfg.COMPANY
+  };
+  if (!config.EACH_COUNT || config.EACH_COUNT.length !== config.prizes.length) {
+    config.EACH_COUNT = config.prizes.map((p, i) => (i === 0 ? 1 : 1));
+  }
+  try {
+    savePrizesConfig(config);
+    cfg = loadPrizesConfig(defaultCfg);
+    defaultType = cfg.prizes[0]["type"];
+    res.json({ type: "success", message: "Prizes saved" });
+  } catch (err) {
+    res.status(500).json({ type: "error", message: err.message });
+  }
+});
+
+// Serve uploaded prize images (GET so it works on Vercel too)
+router.get("/data/prizes/:filename", (req, res) => {
+  const fs = require("fs");
+  const p = path.join(getDataDir(), "prizes", req.params.filename);
+  if (!fs.existsSync(p)) return res.status(404).end();
+  res.sendFile(p);
+});
+try {
+  const fs = require("fs");
+  const pDir = path.join(getDataDir(), "prizes");
+  if (fs.existsSync(pDir)) app.use("/data/prizes", express.static(pDir));
+} catch (e) {}
+
 //对于匹配不到的路径或者请求，返回默认页面
 //区分不同的请求返回不同的页面内容
 router.all("*", (req, res) => {
@@ -224,15 +312,20 @@ app.use(router);
 
 function loadData() {
   const fs = require("fs");
-  const dataDir = process.env.VERCEL ? path.join(process.cwd(), "server", "data") : path.join(dataBath, "data");
-  const jsonPath = path.join(dataDir, "users.json");
+  const writableDataDir = getDataDir();
+  const staticDataDir = process.env.VERCEL ? path.join(process.cwd(), "server", "data") : path.join(dataBath, "data");
+  const jsonPaths = [
+    path.join(writableDataDir, "users.json"),
+    path.join(staticDataDir, "users.json")
+  ];
   const xlsxPaths = [
     path.join(dataBath, "data", "users.xlsx"),
     path.join(process.cwd(), "server", "data", "users.xlsx"),
-    path.join(dataDir, "users.xlsx")
+    path.join(staticDataDir, "users.xlsx")
   ];
   try {
-    if (fs.existsSync(jsonPath)) {
+    let jsonPath = jsonPaths.find(p => fs.existsSync(p));
+    if (jsonPath) {
       curData.users = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
       shuffle(curData.users);
     } else {

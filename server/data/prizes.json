@@ -1,0 +1,15 @@
+{
+  "prizes": [
+    {
+      "type": 0,
+      "text": "Iphone 17",
+      "title": "Pro Max 512 GB",
+      "count": 5,
+      "img": "/data/prizes/prize0-1770549314758.jpg"
+    }
+  ],
+  "EACH_COUNT": [
+    5
+  ],
+  "COMPANY": "UTEC"
+}

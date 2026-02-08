@@ -152,11 +152,75 @@ function shuffle(arr) {
   }
 }
 
+/**
+ * Writable data dir (for uploads). Vercel: /tmp; local: server/data
+ */
+function getDataDir() {
+  const path = require("path");
+  if (process.env.LOTTERY_DATA_DIR) return process.env.LOTTERY_DATA_DIR;
+  if (process.env.VERCEL) return "/tmp/lottery-data";
+  return path.join(__dirname, "data");
+}
+
+/**
+ * Parse Excel buffer to array of [employeeNumber, idNumber, department]
+ */
+function parseExcelBuffer(buffer) {
+  const xlsx = getXlsx();
+  if (!xlsx) throw new Error("node-xlsx not available");
+  const sheets = xlsx.parse(buffer);
+  let rows = [];
+  sheets.forEach(sheet => {
+    if (sheet.data && sheet.data.length) rows = sheet.data;
+  });
+  if (!rows.length) return [];
+  rows.shift(); // header
+  return rows
+    .filter(r => r && r.length >= 3)
+    .map(r => [String(r[0] || "").trim(), String(r[1] || "").trim(), String(r[2] || "").trim()])
+    .filter(r => r[0] || r[1] || r[2]);
+}
+
+function saveUsersJson(rows) {
+  const fs = require("fs");
+  const dir = getDataDir();
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const p = require("path").join(dir, "users.json");
+  fs.writeFileSync(p, JSON.stringify(rows, null, 2), "utf8");
+}
+
+function loadPrizesConfig(defaultCfg) {
+  const fs = require("fs");
+  const path = require("path");
+  const p = path.join(getDataDir(), "prizes.json");
+  if (fs.existsSync(p)) {
+    try {
+      return JSON.parse(fs.readFileSync(p, "utf8"));
+    } catch (e) {
+      return defaultCfg;
+    }
+  }
+  return defaultCfg;
+}
+
+function savePrizesConfig(config) {
+  const fs = require("fs");
+  const path = require("path");
+  const dir = getDataDir();
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "prizes.json"), JSON.stringify(config, null, 2), "utf8");
+}
+
 module.exports = {
   loadTempData,
   loadXML,
   shuffle,
   writeXML,
   saveDataFile,
-  saveErrorDataFile
+  saveErrorDataFile,
+  getDataDir,
+  parseExcelBuffer,
+  saveUsersJson,
+  loadPrizesConfig,
+  savePrizesConfig
 };

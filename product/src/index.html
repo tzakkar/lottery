@@ -17,8 +17,19 @@
     <script src="./lib/CSS3DRenderer.js"></script>
     <script src="./lib/ajax.js"></script>
 
+    <div class="dark-veil" aria-hidden="true">
+      <div class="veil-blob veil-blob-1"></div>
+      <div class="veil-blob veil-blob-2"></div>
+      <div class="veil-blob veil-blob-3"></div>
+      <div class="veil-blob veil-blob-4"></div>
+      <div class="veil-blob veil-blob-5"></div>
+    </div>
     <div class="canvas-box">
       <canvas id="canvas">Your browser does not support canvas</canvas>
+    </div>
+
+    <div class="utec-logo" aria-hidden="true">
+      <img src="./img/utec-logo.png" alt="UTEC" />
     </div>
 
     <div class="music">
@@ -32,6 +43,7 @@
 
     <div id="menu">
       <button id="enter">Enter Lottery</button>
+      <a href="admin.html" class="settings-btn" title="Upload participants & prizes">Admin</a>
       <div id="lotteryBar" class="none">
         <button id="lottery">Start Draw</button>
         <button id="reLottery">Redraw</button>

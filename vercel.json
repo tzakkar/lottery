@@ -9,13 +9,18 @@
     }
   },
   "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" },
     { "source": "/getTempData", "destination": "/api/lottery?path=getTempData" },
     { "source": "/getUsers", "destination": "/api/lottery?path=getUsers" },
     { "source": "/reset", "destination": "/api/lottery?path=reset" },
     { "source": "/saveData", "destination": "/api/lottery?path=saveData" },
     { "source": "/errorData", "destination": "/api/lottery?path=errorData" },
     { "source": "/export", "destination": "/api/lottery?path=export" },
-    { "source": "/download-results", "destination": "/api/lottery?path=download-results" }
+    { "source": "/download-results", "destination": "/api/lottery?path=download-results" },
+    { "source": "/upload-participants", "destination": "/api/lottery?path=upload-participants" },
+    { "source": "/upload-prize-image", "destination": "/api/lottery?path=upload-prize-image" },
+    { "source": "/save-prizes-config", "destination": "/api/lottery?path=save-prizes-config" },
+    { "source": "/data/prizes/:path*", "destination": "/api/lottery?path=data/prizes/:path*" }
   ],
   "env": {
     "LOTTERY_CACHE_DIR": "/tmp"

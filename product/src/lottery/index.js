@@ -8,7 +8,7 @@ import {
   setPrizeData,
   resetPrize
 } from "./prizeList";
-import { NUMBER_MATRIX } from "./config.js";
+import { NUMBER_MATRIX, LETTER_MATRIX } from "./config.js";
 
 const ROTATE_TIME = 3000;
 const ROTATE_LOOP = 1000;
@@ -60,43 +60,59 @@ let selectedCardIndex = [],
 initAll();
 
 /**
+ * Apply config from getTempData response (prizes, users, lucky data) and update UI.
+ * Used on initial load and when refetching after e.g. saving prizes in admin.
+ */
+function applyTempData(data) {
+  if (!data || !data.cfgData || !data.cfgData.prizes) return;
+  prizes = data.cfgData.prizes;
+  EACH_COUNT = data.cfgData.EACH_COUNT;
+  COMPANY = data.cfgData.COMPANY;
+  HIGHLIGHT_CELL = createHighlight();
+  basicData.prizes = prizes;
+  setPrizes(prizes);
+
+  TOTAL_CARDS = ROW_COUNT * COLUMN_COUNT;
+
+  basicData.leftUsers = data.leftUsers;
+  basicData.luckyUsers = data.luckyData || {};
+
+  if (basicData.prizes.length === 0) return;
+
+  let prizeIndex = basicData.prizes.length - 1;
+  for (; prizeIndex > -1; prizeIndex--) {
+    if (
+      data.luckyData && data.luckyData[prizeIndex] &&
+      data.luckyData[prizeIndex].length >= basicData.prizes[prizeIndex].count
+    ) {
+      continue;
+    }
+    currentPrizeIndex = prizeIndex;
+    currentPrize = basicData.prizes[currentPrizeIndex];
+    break;
+  }
+  // If all prizes are full or loop never set index, show last prize in list
+  if (prizeIndex < 0 || currentPrize == null) {
+    currentPrizeIndex = basicData.prizes.length - 1;
+    currentPrize = basicData.prizes[currentPrizeIndex];
+  }
+  // Ensure index is in bounds (e.g. after refetch with fewer prizes)
+  currentPrizeIndex = Math.max(0, Math.min(currentPrizeIndex, basicData.prizes.length - 1));
+  currentPrize = basicData.prizes[currentPrizeIndex];
+
+  showPrizeList(currentPrizeIndex);
+  let curLucks = basicData.luckyUsers[currentPrize.type];
+  setPrizeData(currentPrizeIndex, curLucks ? curLucks.length : 0, true);
+}
+
+/**
  * 初始化所有DOM
  */
 function initAll() {
   window.AJAX({
     url: "/getTempData",
     success(data) {
-      // 获取基础数据
-      prizes = data.cfgData.prizes;
-      EACH_COUNT = data.cfgData.EACH_COUNT;
-      COMPANY = data.cfgData.COMPANY;
-      HIGHLIGHT_CELL = createHighlight();
-      basicData.prizes = prizes;
-      setPrizes(prizes);
-
-      TOTAL_CARDS = ROW_COUNT * COLUMN_COUNT;
-
-      // 读取当前已设置的抽奖结果
-      basicData.leftUsers = data.leftUsers;
-      basicData.luckyUsers = data.luckyData;
-
-      let prizeIndex = basicData.prizes.length - 1;
-      for (; prizeIndex > -1; prizeIndex--) {
-        if (
-          data.luckyData[prizeIndex] &&
-          data.luckyData[prizeIndex].length >=
-            basicData.prizes[prizeIndex].count
-        ) {
-          continue;
-        }
-        currentPrizeIndex = prizeIndex;
-        currentPrize = basicData.prizes[currentPrizeIndex];
-        break;
-      }
-
-      showPrizeList(currentPrizeIndex);
-      let curLucks = basicData.luckyUsers[currentPrize.type];
-      setPrizeData(currentPrizeIndex, curLucks ? curLucks.length : 0, true);
+      applyTempData(data);
     }
   });
 
@@ -111,12 +127,25 @@ function initAll() {
       shineCard();
     }
   });
+
+  // Refetch prize config when page becomes visible (e.g. after saving in admin)
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "visible") return;
+    window.AJAX({
+      url: "/getTempData",
+      success: applyTempData
+    });
+  });
 }
 
 function initCards() {
   let member = basicData.users.slice(),
     showCards = [],
     length = member.length;
+  if (length === 0) {
+    member = [["", "No participants", ""]];
+    length = 1;
+  }
 
   let isBold = false,
     showTable = basicData.leftUsers.length === basicData.users.length,
@@ -344,12 +373,10 @@ function createCard(user, isBold, id, showTable) {
     element.style.backgroundColor =
       "rgba(0,127,127," + (Math.random() * 0.7 + 0.25) + ")";
   }
-  //添加公司标识
+  const safeUser = user && Array.isArray(user) ? user : ["", "-", ""];
   element.appendChild(createElement("company", COMPANY));
-
-  element.appendChild(createElement("name", user[1]));
-
-  element.appendChild(createElement("details", user[0] + "<br/>" + user[2]));
+  element.appendChild(createElement("name", safeUser[1] != null ? safeUser[1] : "-"));
+  element.appendChild(createElement("details", (safeUser[0] != null ? safeUser[0] : "") + "<br/>" + (safeUser[2] != null ? safeUser[2] : "")));
   return element;
 }
 
@@ -706,10 +733,8 @@ function random(num) {
  */
 function changeCard(cardIndex, user) {
   let card = threeDCards[cardIndex].element;
-
-  card.innerHTML = `<div class="company">${COMPANY}</div><div class="name">${
-    user[1]
-  }</div><div class="details">${user[0] || ""}<br/>${user[2] || "PSST"}</div>`;
+  const safeUser = user && Array.isArray(user) ? user : ["", "-", ""];
+  card.innerHTML = `<div class="company">${COMPANY}</div><div class="name">${safeUser[1] != null ? safeUser[1] : "-"}</div><div class="details">${safeUser[0] || ""}<br/>${safeUser[2] || ""}</div>`;
 }
 
 /**
@@ -804,17 +829,20 @@ function reset() {
 }
 
 function createHighlight() {
-  let year = new Date().getFullYear() + "";
+  // Show company name (e.g. UTEC) instead of year, using letter/digit matrices
+  const text = (COMPANY || "UTEC").toString().toUpperCase();
   let step = 4,
     xoffset = 1,
     yoffset = 1,
     highlight = [];
 
-  year.split("").forEach(n => {
+  text.split("").forEach(char => {
+    const matrix = LETTER_MATRIX[char] || (NUMBER_MATRIX[char] || []);
     highlight = highlight.concat(
-      NUMBER_MATRIX[n].map(item => {
+      (matrix || []).map(item => {
+        if (!item || item.length < 2) return null;
         return `${item[0] + xoffset}-${item[1] + yoffset}`;
-      })
+      }).filter(Boolean)
     );
     xoffset += step;
   });

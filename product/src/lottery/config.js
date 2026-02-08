@@ -137,6 +137,15 @@ const NUMBER_MATRIX = [
   ]
 ];
 
+// 3x5 grid patterns for letters (same format as NUMBER_MATRIX: [col, row])
+const LETTER_MATRIX = {
+  U: [[0,0],[0,1],[0,2],[0,3],[0,4],[2,0],[2,1],[2,2],[2,3],[2,4],[1,4]],
+  T: [[0,0],[1,0],[2,0],[1,1],[1,2],[1,3],[1,4]],
+  E: [[0,0],[0,1],[0,2],[0,3],[0,4],[1,0],[2,0],[1,2],[2,2],[1,4],[2,4]],
+  C: [[0,0],[0,1],[0,2],[0,3],[0,4],[1,0],[2,0],[1,4],[2,4]]
+};
+
 module.exports = {
-  NUMBER_MATRIX
+  NUMBER_MATRIX,
+  LETTER_MATRIX
 };

@@ -69,6 +69,14 @@ module.exports = {
       {
         from: "./src/lib",
         to: "./lib"
+      },
+      {
+        from: "./src/admin.html",
+        to: "./admin.html"
+      },
+      {
+        from: "./src/admin.js",
+        to: "./admin.js"
       }
     ])
   ]
