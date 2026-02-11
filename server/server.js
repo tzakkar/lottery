@@ -150,7 +150,7 @@ router.post("/errorData", (req, res, next) => {
 
 // CSV download endpoint (GET)
 router.get("/download-results", (req, res, next) => {
-  let outData = [["ID", "Name", "Department"]];
+  let outData = [["Location", "Employee ID", "First Name"]];
   cfg.prizes.forEach(item => {
     outData.push([item.text]);
     outData = outData.concat(luckyData[item.type] || []);
@@ -166,7 +166,7 @@ router.get("/download-results", (req, res, next) => {
 
 // 保存数据到excel或CSV
 router.post("/export", (req, res, next) => {
-  let outData = [["ID", "Name", "Department"]];
+  let outData = [["Location", "Employee ID", "First Name"]];
   cfg.prizes.forEach(item => {
     outData.push([item.text]);
     outData = outData.concat(luckyData[item.type] || []);
@@ -198,7 +198,7 @@ if (multer) {
   const storage = multer.memoryStorage();
   const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB
 
-  // Upload participants Excel (columns: Employee Number, ID Number, Department)
+  // Upload participants Excel (columns: Location, Employee ID, First Name)
   router.post("/upload-participants", upload.single("file"), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ type: "error", message: "No file uploaded" });
@@ -360,16 +360,16 @@ function getLeftUsers() {
   for (let key in luckyData) {
     let luckys = luckyData[key];
     luckys.forEach(item => {
-      lotteredUser[item[0]] = true;
+      lotteredUser[item[1]] = true; // Employee ID as unique key
     });
   }
   errorData.forEach(item => {
-    lotteredUser[item[0]] = true;
+    lotteredUser[item[1]] = true;
   });
 
   let leftUsers = Object.assign([], curData.users);
   leftUsers = leftUsers.filter(user => {
-    return !lotteredUser[user[0]];
+    return !lotteredUser[user[1]]; // Employee ID
   });
   curData.leftUsers = leftUsers;
 }

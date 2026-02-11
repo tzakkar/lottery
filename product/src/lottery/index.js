@@ -373,10 +373,9 @@ function createCard(user, isBold, id, showTable) {
     element.style.backgroundColor =
       "rgba(0,127,127," + (Math.random() * 0.7 + 0.25) + ")";
   }
-  const safeUser = user && Array.isArray(user) ? user : ["", "-", ""];
-  element.appendChild(createElement("company", COMPANY));
+  const safeUser = user && Array.isArray(user) ? user : ["", "", ""];
+  element.appendChild(createElement("details", (safeUser[2] != null ? safeUser[2] : "-") + "<br/>" + (safeUser[0] != null ? safeUser[0] : "")));
   element.appendChild(createElement("name", safeUser[1] != null ? safeUser[1] : "-"));
-  element.appendChild(createElement("details", (safeUser[0] != null ? safeUser[0] : "") + "<br/>" + (safeUser[2] != null ? safeUser[2] : "")));
   return element;
 }
 
@@ -536,7 +535,7 @@ function selectCard(duration = 600) {
     }
   }
 
-  let text = currentLuckys.map(item => item[1]);
+  let text = currentLuckys.map(item => item[2]);
   addQipao(
     `Congratulations to ${text.join(", ")} for winning ${currentPrize.title}!`
   );
@@ -734,7 +733,7 @@ function random(num) {
 function changeCard(cardIndex, user) {
   let card = threeDCards[cardIndex].element;
   const safeUser = user && Array.isArray(user) ? user : ["", "-", ""];
-  card.innerHTML = `<div class="company">${COMPANY}</div><div class="name">${safeUser[1] != null ? safeUser[1] : "-"}</div><div class="details">${safeUser[0] || ""}<br/>${safeUser[2] || ""}</div>`;
+  card.innerHTML = `<div class="details">${safeUser[2] != null ? safeUser[2] : "-"}<br/>${safeUser[0] || ""}</div><div class="name">${safeUser[1] != null ? safeUser[1] : "-"}</div>`;
 }
 
 /**

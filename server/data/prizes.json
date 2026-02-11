@@ -4,12 +4,20 @@
       "type": 0,
       "text": "Iphone 17",
       "title": "Pro Max 512 GB",
-      "count": 5,
+      "count": 1,
       "img": "/data/prizes/prize0-1770549314758.jpg"
+    },
+    {
+      "type": 1,
+      "text": "Airbods",
+      "title": "Huw",
+      "count": 2,
+      "img": "/data/prizes/prize1-1770798047534.webp"
     }
   ],
   "EACH_COUNT": [
-    5
+    1,
+    2
   ],
   "COMPANY": "UTEC"
 }

@@ -163,7 +163,8 @@ function getDataDir() {
 }
 
 /**
- * Parse Excel buffer to array of [employeeNumber, idNumber, department]
+ * Parse Excel buffer to array of [Location, Employee ID, First Name]
+ * Expected columns: 1-Location, 2-Employee ID number, 3-First Name
  */
 function parseExcelBuffer(buffer) {
   const xlsx = getXlsx();
