@@ -159,7 +159,9 @@ function showPrizeList(currentPrizeIndex) {
   if (currentPrize.type === defaultType) {
     currentPrize.count === "Unlimited";
   }
-  const currentImg = currentPrize.img ? `<img src="${currentPrize.img}" alt="" class="prize-mess-img" onerror="this.style.display='none'">` : "";
+  const imgV = (window.__prizeConfigVersion || Date.now());
+  const imgUrl = (url) => (url ? (url + (url.indexOf("?") >= 0 ? "&" : "?") + "v=" + imgV) : "");
+  const currentImg = currentPrize.img ? `<img src="${imgUrl(currentPrize.img)}" alt="" class="prize-mess-img" onerror="this.style.display='none'">` : "";
   let htmlCode = `<div class="prize-mess">${currentImg}<span class="prize-mess-text">Drawing <label id="prizeType" class="prize-shine">${currentPrize.text}</label> <label id="prizeText" class="prize-shine">${currentPrize.title}</label> — <label id="prizeLeft" class="prize-shine">${currentPrize.count}</label> left</span></div><ul class="prize-list">`;
   prizes.forEach(item => {
     const countLabel = item.count + "/" + item.count;
@@ -168,7 +170,7 @@ function showPrizeList(currentPrizeIndex) {
     }">
                         <span></span><span></span><span></span><span></span>
                         <div class="prize-img">
-                            <img src="${item.img}" alt="${item.title}">
+                            <img src="${imgUrl(item.img)}" alt="${item.title}">
                         </div>
                         <div class="prize-text">
                             <h5 class="prize-title">${item.text} ${

@@ -65,6 +65,7 @@ initAll();
  */
 function applyTempData(data) {
   if (!data || !data.cfgData || !data.cfgData.prizes) return;
+  window.__prizeConfigVersion = Date.now();
   prizes = data.cfgData.prizes;
   EACH_COUNT = data.cfgData.EACH_COUNT;
   COMPANY = data.cfgData.COMPANY;
@@ -110,7 +111,7 @@ function applyTempData(data) {
  */
 function initAll() {
   window.AJAX({
-    url: "/getTempData",
+    url: "/getTempData?t=" + Date.now(),
     success(data) {
       applyTempData(data);
     }
@@ -128,13 +129,18 @@ function initAll() {
     }
   });
 
-  // Refetch prize config when page becomes visible (e.g. after saving in admin)
-  document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState !== "visible") return;
+  // Refetch prize config when page becomes visible or restored from back cache (e.g. after saving in admin)
+  function refetchPrizesAndApply() {
     window.AJAX({
-      url: "/getTempData",
+      url: "/getTempData?t=" + Date.now(),
       success: applyTempData
     });
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") refetchPrizesAndApply();
+  });
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted) refetchPrizesAndApply();
   });
 }
 

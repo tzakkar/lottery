@@ -61,13 +61,34 @@ const prizes = [
     text: "Sixth Prize",
     title: "Edifier Bluetooth Earbuds",
     img: "../img/edifier.jpg"
+  },
+  {
+    type: 8,
+    count: 2,
+    text: "WATCH GT6 46MM BLACK",
+    title: "",
+    img: "/data/prizes/watch-gt6-46mm-black.png"
+  },
+  {
+    type: 9,
+    count: 4,
+    text: "HUAWEI WATCH FIT 4 BLACK",
+    title: "",
+    img: "/data/prizes/watch-fit-4-black.png"
+  },
+  {
+    type: 10,
+    count: 10,
+    text: "EARBUDS BT TW SE2 BLACK",
+    title: "",
+    img: "/data/prizes/earbuds-bt-tw-se2-black.png"
   }
 ];
 
 /**
  * 一次抽取的奖品个数与prizes对应
  */
-const EACH_COUNT = [1, 1, 5, 6, 7, 8, 9, 10];
+const EACH_COUNT = [1, 1, 5, 6, 7, 8, 9, 10, 1, 1, 1];
 
 /**
  * 卡片公司名称标识

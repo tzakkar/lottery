@@ -77,9 +77,11 @@ app.post("*", (req, res, next) => {
   next();
 });
 
-// 获取之前设置的数据
+// 获取之前设置的数据 (no-cache so prizes/config are always fresh after save)
 router.post("/getTempData", (req, res, next) => {
   getLeftUsers();
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.set("Pragma", "no-cache");
   res.json({
     cfgData: cfg,
     leftUsers: curData.leftUsers,
@@ -256,21 +258,34 @@ router.post("/save-prizes-config", (req, res) => {
   }
 });
 
-// Serve uploaded prize images (GET); try writable dir then repo server/data/prizes
+// Serve uploaded prize images (GET); try writable dir then repo; no-cache so updates show
 router.get("/data/prizes/:filename", (req, res) => {
   const fs = require("fs");
   const writablePath = path.join(getDataDir(), "prizes", req.params.filename);
   const staticPath = path.join(__dirname, "data", "prizes", req.params.filename);
   const p = fs.existsSync(writablePath) ? writablePath : (fs.existsSync(staticPath) ? staticPath : null);
   if (!p) return res.status(404).end();
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.set("Pragma", "no-cache");
   res.sendFile(path.resolve(p));
 });
 try {
   const fs = require("fs");
   const writableDir = path.join(getDataDir(), "prizes");
   const staticDir = path.join(__dirname, "data", "prizes");
-  if (fs.existsSync(writableDir)) app.use("/data/prizes", express.static(writableDir));
-  else if (fs.existsSync(staticDir)) app.use("/data/prizes", express.static(staticDir));
+  if (fs.existsSync(writableDir)) {
+    app.use("/data/prizes", (req, res, next) => {
+      res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      res.set("Pragma", "no-cache");
+      next();
+    }, express.static(writableDir));
+  } else if (fs.existsSync(staticDir)) {
+    app.use("/data/prizes", (req, res, next) => {
+      res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      res.set("Pragma", "no-cache");
+      next();
+    }, express.static(staticDir));
+  }
 } catch (e) {}
 
 //对于匹配不到的路径或者请求，返回默认页面
