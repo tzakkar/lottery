@@ -193,12 +193,15 @@ function saveUsersJson(rows) {
 function loadPrizesConfig(defaultCfg) {
   const fs = require("fs");
   const path = require("path");
-  const p = path.join(getDataDir(), "prizes.json");
-  if (fs.existsSync(p)) {
-    try {
-      return JSON.parse(fs.readFileSync(p, "utf8"));
-    } catch (e) {
-      return defaultCfg;
+  const writablePath = path.join(getDataDir(), "prizes.json");
+  const staticPath = path.join(__dirname, "data", "prizes.json");
+  for (const p of [writablePath, staticPath]) {
+    if (fs.existsSync(p)) {
+      try {
+        return JSON.parse(fs.readFileSync(p, "utf8"));
+      } catch (e) {
+        continue;
+      }
     }
   }
   return defaultCfg;

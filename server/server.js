@@ -256,17 +256,21 @@ router.post("/save-prizes-config", (req, res) => {
   }
 });
 
-// Serve uploaded prize images (GET so it works on Vercel too)
+// Serve uploaded prize images (GET); try writable dir then repo server/data/prizes
 router.get("/data/prizes/:filename", (req, res) => {
   const fs = require("fs");
-  const p = path.join(getDataDir(), "prizes", req.params.filename);
-  if (!fs.existsSync(p)) return res.status(404).end();
-  res.sendFile(p);
+  const writablePath = path.join(getDataDir(), "prizes", req.params.filename);
+  const staticPath = path.join(__dirname, "data", "prizes", req.params.filename);
+  const p = fs.existsSync(writablePath) ? writablePath : (fs.existsSync(staticPath) ? staticPath : null);
+  if (!p) return res.status(404).end();
+  res.sendFile(path.resolve(p));
 });
 try {
   const fs = require("fs");
-  const pDir = path.join(getDataDir(), "prizes");
-  if (fs.existsSync(pDir)) app.use("/data/prizes", express.static(pDir));
+  const writableDir = path.join(getDataDir(), "prizes");
+  const staticDir = path.join(__dirname, "data", "prizes");
+  if (fs.existsSync(writableDir)) app.use("/data/prizes", express.static(writableDir));
+  else if (fs.existsSync(staticDir)) app.use("/data/prizes", express.static(staticDir));
 } catch (e) {}
 
 //对于匹配不到的路径或者请求，返回默认页面

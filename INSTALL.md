@@ -56,8 +56,24 @@ Use this list to install and run the repo locally.
 
 ## Configuration (optional)
 
-- **Participants (Excel):** Edit `server/data/users.xlsx` (keep file name and header format as in the original).
-- **Prizes:** Edit `server/config.js` (prizes, `EACH_COUNT`, `COMPANY`).
+- **Participants (Excel):** Upload via Admin or place `server/data/users.xlsx` (columns: Location, Employee ID, First Name). Saved to `server/data/users.json`.
+- **Prizes:** Configure via Admin (prizes, images, quantities). Saved to `server/data/prizes.json` and `server/data/prizes/`.
+
+## Persisting data (no re-upload on new PC)
+
+To keep prizes and participants when you refresh, redeploy, or run on another machine, **commit and push** the data folder so it lives in the repo:
+
+- `server/data/prizes.json` — prize list and settings
+- `server/data/prizes/` — prize images
+- `server/data/users.json` — participants (after uploading Excel in Admin)
+
+After saving in Admin, run:
+```bash
+git add server/data/prizes.json server/data/prizes/ server/data/users.json
+git commit -m "Update prizes and participants"
+git push
+```
+Then on another PC, `git pull` and run the app; prizes and participants will be there without re-uploading.
 
 ## Quick checklist
 
