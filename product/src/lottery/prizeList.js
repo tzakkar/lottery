@@ -237,14 +237,17 @@ let setPrizeData = (function () {
     }
 
     if (lasetPrizeIndex !== currentPrizeIndex) {
-      let lastPrize = prizes[lasetPrizeIndex],
-        lastBox = document.querySelector(`#prize-item-${lastPrize.type}`);
-      lastBox.classList.remove("shine");
-      lastBox.classList.add("done");
-      elements.box && elements.box.classList.add("shine");
-      prizeElement.prizeType.textContent = currentPrize.text;
-      prizeElement.prizeText.textContent = currentPrize.title;
-
+      let lastPrize = prizes[lasetPrizeIndex];
+      if (lastPrize) {
+        let lastBox = document.querySelector(`#prize-item-${lastPrize.type}`);
+        if (lastBox) {
+          lastBox.classList.remove("shine");
+          lastBox.classList.add("done");
+        }
+      }
+      if (elements && elements.box) elements.box.classList.add("shine");
+      if (prizeElement.prizeType) prizeElement.prizeType.textContent = currentPrize.text;
+      if (prizeElement.prizeText) prizeElement.prizeText.textContent = currentPrize.title;
       lasetPrizeIndex = currentPrizeIndex;
     }
 

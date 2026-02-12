@@ -104,6 +104,26 @@ function applyTempData(data) {
   showPrizeList(currentPrizeIndex);
   let curLucks = basicData.luckyUsers[currentPrize.type];
   setPrizeData(currentPrizeIndex, curLucks ? curLucks.length : 0, true);
+  updateParticipantCount();
+}
+
+function updateParticipantCount() {
+  // Prefer full uploaded list count; else count = remaining + winners (so refresh always shows a number)
+  let total = 0;
+  if (basicData.users && Array.isArray(basicData.users) && basicData.users.length > 0) {
+    total = basicData.users.length;
+  } else {
+    total =
+      (basicData.leftUsers ? basicData.leftUsers.length : 0) +
+      (basicData.luckyUsers
+        ? Object.values(basicData.luckyUsers).reduce(
+            (s, arr) => s + (Array.isArray(arr) ? arr.length : 0),
+            0
+          )
+        : 0);
+  }
+  let el = document.getElementById("participantCount");
+  if (el) el.textContent = total + (total === 1 ? " participant" : " participants");
 }
 
 /**
@@ -120,8 +140,8 @@ function initAll() {
   window.AJAX({
     url: "/getUsers",
     success(data) {
-      basicData.users = data;
-
+      basicData.users = Array.isArray(data) ? data : [];
+      updateParticipantCount();
       initCards();
       // startMaoPao();
       animate();
@@ -291,6 +311,7 @@ function bindEvent() {
 
           resetPrize(currentPrizeIndex);
           reset();
+          updateParticipantCount();
           switchScreen("enter");
         }, 0);
         break;
@@ -693,9 +714,14 @@ function lottery() {
     let drawnPrizeIndex = currentPrizeIndex,
       drawnType = currentPrize.type;
     saveData().then(() => {
-      // 更新刚抽中的奖品行的计数（saveData 可能已切换到下一奖品）
+      // 更新刚抽中的奖品行计数
       setPrizeData(drawnPrizeIndex, basicData.luckyUsers[drawnType] ? basicData.luckyUsers[drawnType].length : 0);
+      // 更新顶部 “Drawing X” 和左侧高亮为当前（可能已切换到下一）奖品
       changePrize();
+      // 再次刷新当前奖品的显示，确保切换到 index 0 时顶部和左侧也正确更新
+      let curCount = basicData.luckyUsers[currentPrize.type] ? basicData.luckyUsers[currentPrize.type].length : 0;
+      setPrizeData(currentPrizeIndex, curCount);
+      updateParticipantCount();
       currentLuckys = [];
     });
   });
@@ -753,7 +779,8 @@ function random(num) {
 function changeCard(cardIndex, user) {
   let card = threeDCards[cardIndex].element;
   const safeUser = user && Array.isArray(user) ? user : ["", "-", ""];
-  card.innerHTML = `<div class="details">${safeUser[2] != null ? safeUser[2] : "-"}<br/>${safeUser[0] || ""}</div><div class="name">${safeUser[1] != null ? safeUser[1] : "-"}</div>`;
+  // Number (Employee ID) on top, name (First Name) under it so winner names appear under numbers
+  card.innerHTML = `<div class="name">${safeUser[1] != null ? safeUser[1] : "-"}</div><div class="details">${safeUser[2] != null ? safeUser[2] : "-"}</div>`;
 }
 
 /**

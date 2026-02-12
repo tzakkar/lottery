@@ -208,6 +208,12 @@ if (multer) {
     try {
       const rows = parseExcelBuffer(req.file.buffer);
       saveUsersJson(rows);
+      const fs = require("fs");
+      const usersXlsxPath = path.join(getDataDir(), "users.xlsx");
+      if (!fs.existsSync(path.dirname(usersXlsxPath))) {
+        fs.mkdirSync(path.dirname(usersXlsxPath), { recursive: true });
+      }
+      fs.writeFileSync(usersXlsxPath, req.file.buffer);
       curData.users = rows;
       shuffle(curData.users);
       curData.leftUsers = curData.users.slice();
@@ -343,14 +349,15 @@ function loadData() {
     path.join(staticDataDir, "users.xlsx")
   ];
   try {
-    let jsonPath = jsonPaths.find(p => fs.existsSync(p));
-    if (jsonPath) {
-      curData.users = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+    // Prefer xlsx over json so an updated users.xlsx (e.g. 800 rows) is used instead of old users.json (e.g. 50)
+    let usersPath = xlsxPaths.find(p => fs.existsSync(p));
+    if (usersPath) {
+      curData.users = loadXML(usersPath);
       shuffle(curData.users);
     } else {
-      let usersPath = xlsxPaths.find(p => fs.existsSync(p));
-      if (usersPath) {
-        curData.users = loadXML(usersPath);
+      let jsonPath = jsonPaths.find(p => fs.existsSync(p));
+      if (jsonPath) {
+        curData.users = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
         shuffle(curData.users);
       } else {
         curData.users = [];
